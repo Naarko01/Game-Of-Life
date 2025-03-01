@@ -9,6 +9,9 @@ let cols = width / cellSize; // number of columns
 let grid = new Array(rows);
 let nextGrid = new Array(rows);
 
+let aliveCells = new Set();
+let cellsToCheck = new Set();
+
 function DrawGrid() {
 
     ctx1.beginPath();
@@ -61,8 +64,8 @@ function InitGrid() {
 function ResetGrid() {
     for (let i = 0; i < rows; i++) {
         for (let j = 0; j < cols; j++) {
-            grid[i][j] = 0;
-            nextGrid[i][j] = 0;
+            grid[i][j].value = 0;
+            nextGrid[i][j].value = 0;
         }
     }
 }
@@ -71,12 +74,11 @@ function ResetGrid() {
 function CopyAndResetGrid() {
     for (let i = 0; i < rows; i++) {
         for (let j = 0; j < cols; j++) {
-            grid[i][j] = nextGrid[i][j];
-            nextGrid[i][j] = 0;
+            grid[i][j].value = nextGrid[i][j].value;
+            nextGrid[i][j].value = 0;
         }
     }
 }
-
 
 function CheckAliveCells() {
     grid.forEach((row, rowIndex) => {
@@ -84,6 +86,7 @@ function CheckAliveCells() {
             if (cell.value === 1) {
                 // do something with the cell
                 console.log(`Cell at row ${rowIndex}, column ${columnIndex} has value 1`);
+                aliveCells.add({ x: columnIndex, y: rowIndex });
             }
         });
     });
