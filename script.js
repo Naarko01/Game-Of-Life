@@ -1,44 +1,74 @@
 const canvas1 = document.getElementById("canvas1");
-const canvas2 = document.getElementById("canvas2");
 const width = canvas1.width;
 const height = canvas1.height;
 const ctx1 = canvas1.getContext("2d");
-const ctx2 = canvas2.getContext("2d");
-var cellSize = 10;
 
-
-
-
-DrawGrid();
+let cellSize = 10;
+let rows = height / cellSize;
+let cols = width / cellSize;
+let grid = new Array(rows);
+let nextGrid = new Array(rows);
+let timer;
 
 function DrawGrid() {
 
     ctx1.beginPath();
-    ctx2.beginPath();
     ctx1.strokeStyle = "black";
-    ctx2.strokeStyle = "black";
 
-    for (var i = 0; i <= height; i += cellSize) {
+    for (let i = 0; i <= height; i += cellSize) {
         ctx1.moveTo(0, i);
-        ctx2.moveTo(0, i);
         ctx1.lineTo(width, i);
-        ctx2.lineTo(width, i);
     }
 
-    for (var j = 0; j <= width; j += cellSize) {
+    for (let j = 0; j <= width; j += cellSize) {
         ctx1.moveTo(j, 0);
-        ctx2.moveTo(j, 0);
         ctx1.lineTo(j, height);
-        ctx2.lineTo(j, height);
     }
-
     ctx1.stroke();
-    ctx2.stroke();
 }
 
-function DrawCells() {
-
+//assign an array of length = rows to each element of grid array. 
+// Now grid is a 2D array with x and y coordinates (y = rows, x = cols)
+function InitGrid() {
+    for (let i = 0; i < rows; i++) {
+        grid[i] = new Array(cols);
+        nextGrid[i] = new Array(cols);
+    }
 }
+
+function ResetGrid() {
+    for (let i = 0; i < rows; i++) {
+        for (let j = 0; j < cols; j++) {
+            grid[i][j] = 0;
+            nextGrid[i][j] = 0;
+        }
+    }
+}
+
+//pass the state of the current grid to the next grid and clear the current grid (iterate through generations)
+function CopyAndResetGrid() {
+    for (let i = 0; i < rows; i++) {
+        for (let j = 0; j < cols; j++) {
+            grid[i][j] = nextGrid[i][j];
+            nextGrid[i][j] = 0;
+        }
+    }
+}
+
+function InitGame() {
+    DrawGrid();
+    InitGrid();
+}
+
+window.onload = InitGame;
+
+
+
+
+
+
+
+
 
 
 
