@@ -3,14 +3,21 @@ const width = canvas1.width;
 const height = canvas1.height;
 const ctx1 = canvas1.getContext("2d");
 
-let cellSize = 10;
-let rows = height / cellSize; // number of rows
-let cols = width / cellSize; // number of columns
-let grid = new Array(rows);
-let nextGrid = new Array(rows);
+var cellSize = 10;
+var rows = height / cellSize; // number of rows
+var cols = width / cellSize; // number of columns
+var grid = new Array(rows);
+var nextGrid = new Array(rows);
+var playing = false;
+var timer;
+var generationTime = 100;
 
-let aliveCells = new Set();
-let cellsToCheck = new Set();
+var aliveCells = new Set();
+var cellsToCheck = new Set();
+
+var startButton = document.getElementById('Start');
+var clearButton = document.getElementById('Clear');
+var randomButton = document.getElementById('Random');
 
 function DrawGrid() {
 
@@ -48,6 +55,20 @@ canvas1.addEventListener('click', (event) => {
     CheckAliveCells();
 });
 
+//TODO repenser cette methode, l'ensemble des éléments est réajouté a chaque call
+function CheckAliveCells(cell) {
+    grid.forEach((row, rowIndex) => {
+        row.forEach((cell, columnIndex) => {
+            cell = { x: columnIndex, y: rowIndex };
+            if (!aliveCells.has(cell)) {
+                console.log(`Cell at row ${rowIndex}, column ${columnIndex} has value 1`);
+                aliveCells.add(cell);
+            }
+        });
+    });
+    console.log(aliveCells);
+}
+
 //assign an array of length = rows to each element of grid array. 
 // Now grid is a 2D array with x and y coordinates (y = rows, x = cols)
 function InitGrid() {
@@ -80,21 +101,44 @@ function CopyAndResetGrid() {
     }
 }
 
-function CheckAliveCells() {
-    grid.forEach((row, rowIndex) => {
-        row.forEach((cell, columnIndex) => {
-            if (cell.value === 1) {
-                // do something with the cell
-                console.log(`Cell at row ${rowIndex}, column ${columnIndex} has value 1`);
-                aliveCells.add({ x: columnIndex, y: rowIndex });
-            }
-        });
-    });
-}
-
 function InitGame() {
     DrawGrid();
     InitGrid();
+    ButtonsActions();
+}
+
+function ButtonsActions() {
+    startButton.onclick = StartButtonFunction;
+    clearButton.onclick = ClearButtonFunction;
+    randomButton.onclick = RandomButtonFunction;
+}
+
+function StartButtonFunction() {
+
+}
+
+function ClearButtonFunction() {
+    console.log("Clear the grid and stop the game");
+    playing = false;
+    startButton.innerHTML = "Start";
+    clearTimeout(timer);
+    aliveCells.clear();
+    cellsToCheck.clear();
+    ResetGrid();
+
+    console.log("aliveCelles" + aliveCells);
+    console.log("cellsToCheck" + cellsToCheck);
+
+}
+
+function RandomButtonFunction() {
+
+}
+
+function Play() {
+    if (playing) {
+        timer = setTimeout(Play, generationTime);
+    }
 }
 
 window.onload = InitGame;
