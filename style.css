@@ -6,6 +6,7 @@ body {
 canvas {
     position: relative;
     margin-top: 30px;
+    padding-bottom: 5px;
     background-color: black;
 }
 

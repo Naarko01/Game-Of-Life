@@ -1,147 +1,174 @@
 const canvas1 = document.getElementById("canvas1");
-const width = canvas1.width;
-const height = canvas1.height;
 const ctx1 = canvas1.getContext("2d");
+const startButton = document.getElementById('Start');
+const clearButton = document.getElementById('Clear');
+const randomButton = document.getElementById('Random');
+const linesButton = document.getElementById('ToggleLines');
 
-var cellSize = 10;
-var rows = height / cellSize; // number of rows
-var cols = width / cellSize; // number of columns
-var grid = new Array(rows);
-var nextGrid = new Array(rows);
-var playing = false;
-var timer;
-var generationTime = 100;
+const CELL_SIZE = 10;
+const GRID_WIDTH = canvas1.width / CELL_SIZE;
+const GRID_HEIGHT = canvas1.height / CELL_SIZE;
 
-var aliveCells = new Set();
-var cellsToCheck = new Set();
+let grid = CreateEmptyGrid();
+let nextGrid = CreateEmptyGrid();
+let isRunning = false;
+let timer;
+let generationTime = 100;
 
-var startButton = document.getElementById('Start');
-var clearButton = document.getElementById('Clear');
-var randomButton = document.getElementById('Random');
+startButton.addEventListener('click', ToggleSim);
+clearButton.addEventListener('click', ClearGrid);
+randomButton.addEventListener('click', RandomizeGrid);
+linesButton.addEventListener('click', ToggleLines);
+
+function CreateEmptyGrid() {
+    const grid = new Array(GRID_WIDTH);
+    for (let x = 0; x < GRID_WIDTH; x++) {
+        grid[x] = new Array(GRID_HEIGHT).fill(0);
+    }
+    return grid;
+}
 
 function DrawGrid() {
+    ctx1.clearRect(0, 0, canvas1.width, canvas1.height);
 
-    ctx1.beginPath();
-    ctx1.strokeStyle = "lightgray";
-
-    for (let i = 0; i <= height; i += cellSize) {
-        ctx1.moveTo(0, i);
-        ctx1.lineTo(width, i);
+    // draw allive cells
+    ctx1.fillStyle = 'white';
+    for (let x = 0; x < GRID_WIDTH; x++) {
+        for (let y = 0; y < GRID_HEIGHT; y++) {
+            if (grid[x][y] === 1) {
+                ctx1.fillRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+            }
+        }
     }
+}
 
-    for (let j = 0; j <= width; j += cellSize) {
-        ctx1.moveTo(j, 0);
-        ctx1.lineTo(j, height);
+function ToggleLines() {
+    ctx1.strokStyle = 'white';
+    ctx1.lineWidth = 0.5;
+    ctx1.beginPath();
+    for (let x = 0; x <= GRID_WIDTH; x++) {
+        ctx1.moveTo(x, 0);
+        ctx1.lineTo(x, canvas1.height);
+    }
+    for (let y = 0; y <= GRID_HEIGHT; y++) {
+        ctx1.moveTo(0, y);
+        ctx1.lineTo(canvas1.width, y);
     }
     ctx1.stroke();
 }
 
+function ClearGrid() {
+    grid = CreateEmptyGrid();
+    DrawGrid();
+}
+
+function RandomizeGrid() {
+    for (let x = 0; x < GRID_WIDTH; x++) {
+        for (let y = 0; y < GRID_HEIGHT; y++) {
+            grid[x][y] = Math.random() > 0.9 ? 1 : 0;
+        }
+    }
+    DrawGrid();
+}
+
 canvas1.addEventListener('click', (event) => {
     const rect = canvas1.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-    const row = Math.floor(y / cellSize);
-    const col = Math.floor(x / cellSize);
-    console.log(`Clicked on grid cell[${grid[row][col].x}, ${grid[row][col].y}]`);
+    const scaleX = canvas1.width / rect.width;
+    const scaleY = canvas1.height / rect.height;
 
-    grid[row][col].value = 1; // toggle the value
+    const x = Math.floor((event.clientX - rect.left) * scaleX / CELL_SIZE);
+    const y = Math.floor((event.clientY - rect.top) * scaleY / CELL_SIZE);
+    console.log(`Clicked on grid cell[${x}, ${y}]`);
 
     // Redraw only the updated cell
-    if (grid[row][col].value === 1) {
-        ctx1.fillStyle = 'white'; // color for cells with value 1
+    if (x >= 0 && x < GRID_WIDTH && y >= 0 && y < GRID_HEIGHT) {
+        //swap cell state
+        grid[x][y] = grid[x][y] === 0 ? 1 : 0;
+        DrawGrid();
     }
-    ctx1.fillRect(col * cellSize, row * cellSize, cellSize, cellSize);
-
-    CheckAliveCells();
 });
 
-//TODO repenser cette methode, l'ensemble des éléments est réajouté a chaque call
-function CheckAliveCells(cell) {
-    grid.forEach((row, rowIndex) => {
-        row.forEach((cell, columnIndex) => {
-            cell = { x: columnIndex, y: rowIndex };
-            if (!aliveCells.has(cell)) {
-                console.log(`Cell at row ${rowIndex}, column ${columnIndex} has value 1`);
-                aliveCells.add(cell);
-            }
-        });
-    });
-    console.log(aliveCells);
-}
+function ToggleSim() {
+    isRunning = !isRunning;
+    startButton.textContent = isRunning ? 'Stop' : 'Start';
 
-//assign an array of length = rows to each element of grid array. 
-// Now grid is a 2D array with x and y coordinates (y = rows, x = cols)
-function InitGrid() {
-    for (let i = 0; i < rows; i++) {
-        grid[i] = new Array(cols);
-        nextGrid[i] = new Array(cols);
-        for (let j = 0; j < cols; j++) {
-            grid[i][j] = { x: j, y: i, value: 0 };
-            nextGrid[i][j] = { x: j, y: i, value: 0 };
-        }
+    if (isRunning) {
+        RunSim();
+    }
+    else {
+        clearTimeout(timer);
     }
 }
 
-function ResetGrid() {
-    for (let i = 0; i < rows; i++) {
-        for (let j = 0; j < cols; j++) {
-            grid[i][j].value = 0;
-            nextGrid[i][j].value = 0;
-        }
-    }
-}
-
-//pass the state of the current grid to the next grid and clear the current grid (iterate through generations)
-function CopyAndResetGrid() {
-    for (let i = 0; i < rows; i++) {
-        for (let j = 0; j < cols; j++) {
-            grid[i][j].value = nextGrid[i][j].value;
-            nextGrid[i][j].value = 0;
-        }
-    }
-}
-
-function InitGame() {
+function RunSim() {
+    NextGen();
     DrawGrid();
-    InitGrid();
-    ButtonsActions();
-}
 
-function ButtonsActions() {
-    startButton.onclick = StartButtonFunction;
-    clearButton.onclick = ClearButtonFunction;
-    randomButton.onclick = RandomButtonFunction;
-}
-
-function StartButtonFunction() {
-
-}
-
-function ClearButtonFunction() {
-    console.log("Clear the grid and stop the game");
-    playing = false;
-    startButton.innerHTML = "Start";
-    clearTimeout(timer);
-    aliveCells.clear();
-    cellsToCheck.clear();
-    ResetGrid();
-
-    console.log("aliveCelles" + aliveCells);
-    console.log("cellsToCheck" + cellsToCheck);
-
-}
-
-function RandomButtonFunction() {
-
-}
-
-function Play() {
-    if (playing) {
-        timer = setTimeout(Play, generationTime);
+    if (isRunning) {
+        timer = setTimeout(RunSim, generationTime);
     }
 }
 
-window.onload = InitGame;
+function NextGen() {
+
+    nextGrid = CreateEmptyGrid();
+
+    for (let x = 0; x < GRID_WIDTH; x++) {
+        for (let y = 0; y < GRID_HEIGHT; y++) {
+            const neighbors = CountAliveNeighbors(x, y);
+            //game of life rules
+            //if targeted cell is alive
+            if (grid[x][y] === 1) {
+                //an alive cell with 2 or 3 alive neighbors stay alive
+                if (neighbors === 2 || neighbors === 3) {
+                    nextGrid[x][y] = 1;
+                }
+            } else {
+                //a dead cell with 3 alive neighbors becomes alive
+                if (neighbors === 3) {
+                    nextGrid[x][y] = 1;
+                }
+            }
+
+        }
+    }
+    //swap grids
+    const temp = grid;
+    grid = nextGrid;
+    nextGrid = temp;
+
+}
+
+function CountAliveNeighbors(x, y) {
+    let count = 0;
+
+    //check 8 neighbors of the given cell
+    for (let i = -1; i <= 1; i++) {
+        for (let j = -1; j <= 1; j++) {
+            //don't chech the targeted cell
+            if (i === 0 && j === 0) continue;
+
+            const neighborX = (x + i + GRID_WIDTH) % GRID_WIDTH;
+            const neighborY = (y + j + GRID_HEIGHT) % GRID_HEIGHT;
+
+            count += grid[neighborX][neighborY];
+        }
+    }
+
+    return count;
+}
+
+window.onload = () => {
+    DrawGrid();
+    ToggleLines();
+}
+
+
+
+
+
+
+
 
 
 
