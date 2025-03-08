@@ -40,6 +40,7 @@ function DrawGrid() {
             }
         }
     }
+
 }
 
 function ToggleLines() {
@@ -55,6 +56,8 @@ function ToggleLines() {
         ctx1.lineTo(canvas1.width, y);
     }
     ctx1.stroke();
+    console.log('lines toggled');
+
 }
 
 function ClearGrid() {
@@ -80,7 +83,6 @@ canvas1.addEventListener('click', (event) => {
     const y = Math.floor((event.clientY - rect.top) * scaleY / CELL_SIZE);
     console.log(`Clicked on grid cell[${x}, ${y}]`);
 
-    // Redraw only the updated cell
     if (x >= 0 && x < GRID_WIDTH && y >= 0 && y < GRID_HEIGHT) {
         //swap cell state
         grid[x][y] = grid[x][y] === 0 ? 1 : 0;
@@ -159,8 +161,8 @@ function CountAliveNeighbors(x, y) {
 }
 
 window.onload = () => {
-    DrawGrid();
     ToggleLines();
+    DrawGrid();
 }
 
 
