@@ -13,12 +13,65 @@ let grid = CreateEmptyGrid();
 let nextGrid = CreateEmptyGrid();
 let isRunning = false;
 let timer;
-let generationTime = 100;
+let generationTime = 25;
+let linesToggled = false;
+
+let isDragging = false;
+let lastMouseX = 0;
+let lastMouseY = 0;
 
 startButton.addEventListener('click', ToggleSim);
 clearButton.addEventListener('click', ClearGrid);
 randomButton.addEventListener('click', RandomizeGrid);
 linesButton.addEventListener('click', ToggleLines);
+
+//listener for right mouse button pressed
+document.addEventListener('mousedown', (event) => {
+
+    //check if the right mouse button was clicked
+    if (event.button === 2) {
+        isDragging = true;
+        lastMouseX = event.clientX;
+        lastMouseY = event.clientY;
+
+        //prevent the context menu from opening
+        event.preventDefault();
+    }
+});
+
+//listener for mouse move
+document.addEventListener('mousemove', (event) => {
+    if (isDragging) {
+        //calculate the change in mouse position
+        const deltaX = event.clientX - lastMouseX;
+        const deltaY = event.clientY - lastMouseY;
+
+        //moove window by the change in mouse position, in opposite direction
+        window.scrollBy(-deltaX, -deltaY);
+
+        //update last mouse position
+        lastMouseX = event.clientX;
+        lastMouseY = event.clientY;
+
+        //prevent the context menu from opening
+        event.preventDefault();
+    }
+});
+
+//listener for right mouse button released
+document.addEventListener('mouseup', (event) => {
+    if (event.button === 2) {
+        isDragging = false;
+    }
+});
+
+//listener for desactivate context menu by default
+document.addEventListener('contextmenu', (event) => {
+    event.preventDefault();
+});
+
+
+
 
 function CreateEmptyGrid() {
     const grid = new Array(GRID_WIDTH);
@@ -41,22 +94,36 @@ function DrawGrid() {
         }
     }
 
+    //draw grid lines if toggled
+    if (linesToggled) {
+        drawGridLines();
+    }
+
+}
+
+function drawGridLines() {
+    ctx1.strokeStyle = 'white';
+    ctx1.lineWidth = 0.5;
+    ctx1.beginPath();
+
+    for (let x = 0; x <= GRID_WIDTH; x++) {
+        ctx1.moveTo(x * CELL_SIZE, 0);
+        ctx1.lineTo(x * CELL_SIZE, canvas1.height);
+    }
+
+    for (let y = 0; y <= GRID_HEIGHT; y++) {
+
+        ctx1.moveTo(0, y * CELL_SIZE);
+        ctx1.lineTo(canvas1.width, y * CELL_SIZE);
+    }
+
+    ctx1.stroke();
 }
 
 function ToggleLines() {
-    ctx1.strokStyle = 'white';
-    ctx1.lineWidth = 0.5;
-    ctx1.beginPath();
-    for (let x = 0; x <= GRID_WIDTH; x++) {
-        ctx1.moveTo(x, 0);
-        ctx1.lineTo(x, canvas1.height);
-    }
-    for (let y = 0; y <= GRID_HEIGHT; y++) {
-        ctx1.moveTo(0, y);
-        ctx1.lineTo(canvas1.width, y);
-    }
-    ctx1.stroke();
     console.log('lines toggled');
+    linesToggled = !linesToggled;
+    DrawGrid();
 
 }
 
@@ -161,7 +228,6 @@ function CountAliveNeighbors(x, y) {
 }
 
 window.onload = () => {
-    ToggleLines();
     DrawGrid();
 }
 
