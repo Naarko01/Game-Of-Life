@@ -9,8 +9,8 @@ const CELL_SIZE = 10;
 const GRID_WIDTH = canvas1.width / CELL_SIZE;
 const GRID_HEIGHT = canvas1.height / CELL_SIZE;
 
-let grid = CreateEmptyGrid();
-let nextGrid = CreateEmptyGrid();
+let grid = createEmptyGrid();
+let nextGrid = createEmptyGrid();
 let isRunning = false;
 let timer;
 let generationTime = 25;
@@ -20,10 +20,10 @@ let isDragging = false;
 let lastMouseX = 0;
 let lastMouseY = 0;
 
-startButton.addEventListener('click', ToggleSim);
-clearButton.addEventListener('click', ClearGrid);
-randomButton.addEventListener('click', RandomizeGrid);
-linesButton.addEventListener('click', ToggleLines);
+startButton.addEventListener('click', toggleSim);
+clearButton.addEventListener('click', clearGrid);
+randomButton.addEventListener('click', randomizeGrid);
+linesButton.addEventListener('click', toggleLines);
 
 //listener for right mouse button pressed
 document.addEventListener('mousedown', (event) => {
@@ -70,10 +70,24 @@ document.addEventListener('contextmenu', (event) => {
     event.preventDefault();
 });
 
+//listener for mouse click on the canvas
+canvas1.addEventListener('click', (event) => {
+    const rect = canvas1.getBoundingClientRect();
+    const scaleX = canvas1.width / rect.width;
+    const scaleY = canvas1.height / rect.height;
 
+    const x = Math.floor((event.clientX - rect.left) * scaleX / CELL_SIZE);
+    const y = Math.floor((event.clientY - rect.top) * scaleY / CELL_SIZE);
+    console.log(`Clicked on grid cell[${x}, ${y}]`);
 
+    if (x >= 0 && x < GRID_WIDTH && y >= 0 && y < GRID_HEIGHT) {
+        //swap cell state
+        grid[x][y] = grid[x][y] === 0 ? 1 : 0;
+        drawGrid();
+    }
+});
 
-function CreateEmptyGrid() {
+function createEmptyGrid() {
     const grid = new Array(GRID_WIDTH);
     for (let x = 0; x < GRID_WIDTH; x++) {
         grid[x] = new Array(GRID_HEIGHT).fill(0);
@@ -81,7 +95,7 @@ function CreateEmptyGrid() {
     return grid;
 }
 
-function DrawGrid() {
+function drawGrid() {
     ctx1.clearRect(0, 0, canvas1.width, canvas1.height);
 
     // draw allive cells
@@ -120,71 +134,56 @@ function drawGridLines() {
     ctx1.stroke();
 }
 
-function ToggleLines() {
+function toggleLines() {
     console.log('lines toggled');
     linesToggled = !linesToggled;
-    DrawGrid();
+    drawGrid();
 
 }
 
-function ClearGrid() {
-    grid = CreateEmptyGrid();
-    DrawGrid();
+function clearGrid() {
+    grid = createEmptyGrid();
+    drawGrid();
 }
 
-function RandomizeGrid() {
+function randomizeGrid() {
     for (let x = 0; x < GRID_WIDTH; x++) {
         for (let y = 0; y < GRID_HEIGHT; y++) {
             grid[x][y] = Math.random() > 0.9 ? 1 : 0;
         }
     }
-    DrawGrid();
+    drawGrid();
 }
 
-canvas1.addEventListener('click', (event) => {
-    const rect = canvas1.getBoundingClientRect();
-    const scaleX = canvas1.width / rect.width;
-    const scaleY = canvas1.height / rect.height;
 
-    const x = Math.floor((event.clientX - rect.left) * scaleX / CELL_SIZE);
-    const y = Math.floor((event.clientY - rect.top) * scaleY / CELL_SIZE);
-    console.log(`Clicked on grid cell[${x}, ${y}]`);
-
-    if (x >= 0 && x < GRID_WIDTH && y >= 0 && y < GRID_HEIGHT) {
-        //swap cell state
-        grid[x][y] = grid[x][y] === 0 ? 1 : 0;
-        DrawGrid();
-    }
-});
-
-function ToggleSim() {
+function toggleSim() {
     isRunning = !isRunning;
     startButton.textContent = isRunning ? 'Stop' : 'Start';
 
     if (isRunning) {
-        RunSim();
+        runSim();
     }
     else {
         clearTimeout(timer);
     }
 }
 
-function RunSim() {
-    NextGen();
-    DrawGrid();
+function runSim() {
+    nextGen();
+    drawGrid();
 
     if (isRunning) {
-        timer = setTimeout(RunSim, generationTime);
+        timer = setTimeout(runSim, generationTime);
     }
 }
 
-function NextGen() {
+function nextGen() {
 
-    nextGrid = CreateEmptyGrid();
+    nextGrid = createEmptyGrid();
 
     for (let x = 0; x < GRID_WIDTH; x++) {
         for (let y = 0; y < GRID_HEIGHT; y++) {
-            const neighbors = CountAliveNeighbors(x, y);
+            const neighbors = countAliveNeighbors(x, y);
             //game of life rules
             //if targeted cell is alive
             if (grid[x][y] === 1) {
@@ -208,7 +207,7 @@ function NextGen() {
 
 }
 
-function CountAliveNeighbors(x, y) {
+function countAliveNeighbors(x, y) {
     let count = 0;
 
     //check 8 neighbors of the given cell
@@ -217,9 +216,11 @@ function CountAliveNeighbors(x, y) {
             //don't chech the targeted cell
             if (i === 0 && j === 0) continue;
 
-            const neighborX = (x + i + GRID_WIDTH) % GRID_WIDTH;
-            const neighborY = (y + j + GRID_HEIGHT) % GRID_HEIGHT;
+            const neighborX = (x + i + GRID_WIDTH) % GRID_WIDTH; //give the x coordinate of the neighbor to check
+            const neighborY = (y + j + GRID_HEIGHT) % GRID_HEIGHT; ////give the y coordinate of the neighbor to check
 
+            //increment count by the value of the cell at index neighborX, neighborY in the grid[][].
+            //if cell is alive, increment by 1, else by 0
             count += grid[neighborX][neighborY];
         }
     }
@@ -228,8 +229,10 @@ function CountAliveNeighbors(x, y) {
 }
 
 window.onload = () => {
-    DrawGrid();
+    drawGrid();
 }
+
+
 
 
 
