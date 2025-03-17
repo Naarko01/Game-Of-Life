@@ -10,13 +10,22 @@
 
 <body>
 
-    <canvas id="canvas1" width="2000" height="2000"></canvas>
+    <canvas id="canvas1" width="4000" height="2000"></canvas>
 
     <div class="controls-bar">
         <button id="Start">Start</button>
         <button id="Clear">Clear</button>
         <button id="Random">Random</button>
         <button id="ToggleLines">Toggle Lines</button>
+
+        <div class="pattern-selector">
+            <label for="patternSelect"><b>Pattern: </b></label>
+            <select id="patternSelect">
+                <option value="">-- Sélectionner un pattern --</option>
+                <!-- Autres aptions ajoutés dynamiquement en JS -->
+            </select>
+            <button id="applyPattern">Appliquer</button>
+        </div>
     </div>
 
     <script src="script.js"></script>

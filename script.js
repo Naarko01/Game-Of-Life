@@ -21,6 +21,10 @@ let isDragging = false;
 let lastMouseX = 0;
 let lastMouseY = 0;
 
+window.onload = () => {
+    drawGrid();
+}
+
 startButton.addEventListener('click', toggleSim);
 clearButton.addEventListener('click', clearGrid);
 randomButton.addEventListener('click', randomizeGrid);
@@ -239,9 +243,55 @@ function createCellsToCheckMap() {
     return cellsToCheck;
 }
 
-window.onload = () => {
+//eventlistener to load patterns from JSON when the DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    const patternSelect = document.getElementById('patternSelect');
+    const applyPatternBtn = document.getElementById('applyPattern');
+
+    //load patterns from JSON
+    fetch('patterns.JSON')
+        .then(response => response.json())
+        .then(data => {
+            //fill the list with all patterns names
+            data.patterns.forEach(pattern => {
+                const option = document.createElement('option');
+                option.value = pattern.name;
+                option.textContent = pattern.name;
+                patternSelect.appendChild(option);
+            });
+            //store patterns data in window object
+            window.patternsData = data.patterns;
+        })
+        .catch(error => console.error('Erreur lors du chargement des patterns:', error));
+
+    //event listener for apply pattern button
+    applyPatternBtn.addEventListener('click', () => {
+        const selectedPatternName = patternSelect.value;
+        if (!selectedPatternName) return;
+
+        //find the chosen pattern in the patterns data
+        const selectedPattern = window.patternsData.find(p => p.name === selectedPatternName);
+        if (selectedPattern) {
+            applyPatternToGrid(selectedPattern);
+        }
+    });
+});
+
+//Apply the pattern to the grid
+function applyPatternToGrid(pattern) {
+
+    for (const cell of pattern.cells) {
+        let x = cell[0] + pattern.start[0];
+        let y = cell[1] + pattern.start[1];
+        aliveCells.set(`${x},${y}`, 1);
+    }
+
     drawGrid();
 }
+
+
+
+
 
 
 
