@@ -279,14 +279,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
 //Apply the pattern to the grid
 function applyPatternToGrid(pattern) {
+
     for (const cell of pattern.cells) {
         let x = cell[0] + pattern.start[0];
         let y = cell[1] + pattern.start[1];
         aliveCells.set(`${x},${y}`, 1);
     }
-    drawGrid();
-    console.log(`Applying pattern: ${pattern.name}`);
 
+    drawGrid();
 }
 
 
