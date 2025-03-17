@@ -31,3 +31,14 @@ canvas {
             #C5DEC6, #587559);
 
 }
+
+.pattern-selector {
+    margin: -3em 22em;
+    padding: .75em;
+    border-radius: 5px;
+}
+
+.pattern-selector label {
+    color: rgb(222, 9, 9);
+    font-size: large;
+}
